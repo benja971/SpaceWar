@@ -1,5 +1,4 @@
 import pygame, json, os
-# from tkinter import *
 from random import randint, random
 from ctypes import windll
 windll.shcore.SetProcessDpiAwareness(1)
@@ -20,7 +19,7 @@ def getImgBank(path: str) -> dict:
 			d[f] = getImgBank(f'{path}/{f}')
 	return d
 
-bank = getImgBank("images/Space")
+bank = getImgBank("images")
 
 class ElementGraphique():
 	# Le constructeur basique
@@ -38,7 +37,7 @@ class Perso(ElementGraphique):
 	def __init__(self, img, x, y):
 		super(Perso, self).__init__(img, x, y)
 		self.vie = 1
-		self.vitesse = 5
+		self.vitesse = 10
 		self.angle = 0
 		self.anglemax = 0
 
@@ -218,104 +217,21 @@ class Perso(ElementGraphique):
 		return True
 
 
-class Enemys(ElementGraphique):
-	def __init__(self, img, x, y, pouvoir, v, i, rebmax):
-		super(Enemys, self).__init__(img, x, y)
-		self.vx = v
-		self.vy = v
-		self.reb = 0
-		self.pouvoir = pouvoir
-		self.rebmax = rebmax
-		self.apparition = i
-
-	def Deplacer(self, hauteur, largeur, enemys, balle):
-		rebond = False
-		if self.rect.y + self.rect.h >= hauteur:
-			self.vy = -abs(self.vy)
-			rebond = True
-		
-		if self.rect.y < 0:
-			self.vy = abs(self.vy)
-			rebond = True
-
-		if self.rect.x +self.rect.w >= largeur:
-			self.vx = -abs(self.vx)
-			rebond = True
-
-		if self.rect.x <= 0:
-			self.vx = abs(self.vx)
-			rebond = True
-
-		if rebond:
-			self.reb += 1
-
-		if self.reb == self.rebmax:
-			enemys.remove(balle)
-
-		self.rect.y += self.vy
-		self.rect.x += self.vx
-		
-	def Deplacer2(self, perso):
-		if self.rect.x > perso.rect.x and self.vx > -7:
-			self.vx -= 1
-
-		if self.rect.y > perso.rect.y and self.vy > -7:
-			self.vy -= 1
-		
-		if self.rect.x < perso.rect.x and self.vx < 7:
-			self.vx += 1
-
-		if self.rect.y < perso.rect.y and self.vy < 7:
-			self.vy += 1
-
-		if self.rect.x == perso.rect.x:
-			self.vx = 0
-
-		if self.rect.y == perso.rect.y:
-			self.vy = 0
-
-		self.rect.x += self.vx
-		self.rect.y += self.vy
-	
-			
-	
-	def Collisions(self, Perso, enemys, balle):
-		if self.rect.colliderect(Perso.rect):
-			if self.pouvoir == 0:
-				enemys.remove(balle)
-				Perso.vie -= 1
-			
-			if self.pouvoir == 1:
-				enemys.clear()
-
-			if self.pouvoir == 2:
-				enemys.remove(balle)
-				Perso.vie -= 2
-			
-			if self.pouvoir == 3:
-				enemys.remove(balle)
-				Perso.vie += 1
 
 
 fondjeu = ElementGraphique(bank["background"], 0, 0)
 perso = Perso(bank["tile000"], 960, 540)	
 
-font = pygame.font.Font(None, 30)
-font2 = pygame.font.Font("polices/airstrikeb3d.ttf", 100)
-font3 = pygame.font.Font("polices/Ornamentmix.ttf", 100)
-
 N,S,E,W,NE,NW,SE,SW = True,False,False,False,False,False,False,False
-
-enemys = []
 
 horloge = pygame.time.Clock()
 i = 0
-secondes = 0
+
 state = 'Jeu'
 continuer = True
 
 while continuer:
-	horloge.tick(144)
+	horloge.tick(30)
 	i+=1
 
 	touches = pygame.key.get_pressed()
@@ -329,39 +245,10 @@ while continuer:
 
 	if state == "Jeu":
 
-		imagevie = font.render("Vies: "+str(perso.vie), 1, (255, 255, 255))		
-		vie = ElementGraphique(imagevie, 0,5)
-
-		imagetemps = font.render("Secondes: "+str(secondes), 1, (255, 255, 255))
-		temps = ElementGraphique(imagetemps, 0,25)	
-
-		if i %60 == 0:
-			secondes += 1
-
-		if i %90 == 0:
-			nbr = random()
-			if 0 <= nbr < 0.5:
-				enemys.append(Enemys(bank["balle"] ,randint(0, largeur), randint(0, hauteur), 0, randint(5, 15), i, randint(2, 5)))
-
-			if 0.5 <= nbr < 0.7:
-				enemys.append(Enemys(bank["bonus"] ,randint(0, largeur), randint(0, hauteur), 1, randint(5, 15), i, randint(2, 5)))
-
-			if 0.7 <= nbr < 0.85:
-				enemys.append(Enemys(bank["mort"],randint(0, largeur), randint(0, hauteur), 2, randint(5, 15), i, randint(2, 5)))
-
-			if 0.85 <= nbr <= 1:
-				enemys.append(Enemys(bank["coeur"],randint(0, largeur), randint(0, hauteur), 3, randint(5, 15), i, randint(2, 5)))
-
 		fondjeu.Afficher(fenetre)
 		N,S,E,W,NE,NW,SE,SW = perso.Direction(touches, N,S,E,W,NE,NW,SE,SW)
 		perso.Orientation(N,S,E,W,NE,NW,SE,SW)
 		perso.Deplacer(touches, largeur, hauteur)
-		vie.Afficher(fenetre)
-		temps.Afficher(fenetre)
-				
-		for balle in enemys:
-			balle.Afficher(fenetre)
-			balle.Deplacer(hauteur, largeur, enemys, balle)
 
 	pygame.display.update()
 
